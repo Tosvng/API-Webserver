@@ -1,0 +1,249 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+      integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+
+  <script>
+    var num_memos = 0;
+    var host = window.location.hostname;
+    function saveClicked() {
+      console.log("button clicked");
+
+      var oReq = new XMLHttpRequest();
+      oReq.addEventListener("load", showNewMemo);
+      oReq.open("POST", "http://" + host + ":8547/api/memo");
+      // var userName = document.getElementById("userName").value;
+      var newMemo = document.getElementById("enterMemo").value;
+      console.log(oReq);
+      oReq.send(/*"userName=" + userName + "&" + */ "enterMemo=" + newMemo);
+    }
+
+    function deleteMemo(btnID) {
+      tags = btnID.split("&");
+      userID = tags[1];
+      index = tags[2];
+      document.getElementById(userID + "&" + index).remove();
+      //document.getElementById(btnID).remove();
+      var delReq = new XMLHttpRequest();
+      delReq.open(
+        "DELETE",
+        "http://" + host + ":8547/api/memo/" + userID + "&" + index
+      );
+      delReq.send();
+    }
+
+    function showNewMemo() {
+      var newReq = new XMLHttpRequest();
+      newReq.addEventListener("load", loadedEventCallback1);
+      newReq.open("GET", "http://" + host + ":8547/api/memo");
+      newReq.send();
+
+      function loadedEventCallback1() {
+        var theData = JSON.parse(newReq.responseText);
+        console.log(theData);
+        //get the div id
+        var name = document.getElementById("Memos");
+
+        //get the username value
+        var cookies = document.cookie;
+        var userName;
+        userName = cookies;
+        userName = cookies.toString();
+        console.log(userName);
+
+        //get the user memo
+        memo = theData[userName];
+        console.log(memo);
+
+        //create new div element
+        var iDiv = document.createElement("div");
+        //give it the post container class
+        iDiv.className = "post-container";
+
+        // create paragraph element for memo------------------------------
+        var newMemoTag = document.createElement("p");
+        // create text node
+        var memoText = document.createTextNode(memo[memo.length - 1]);
+        // append text node to paragraph
+        newMemoTag.appendChild(memoText);
+
+        // create paragraph element for the id------------------------------
+        var idTag = document.createElement("p");
+        //give it the post container class
+        idTag.className = "name-tag";
+        // create text node fro the id
+        var idText = document.createTextNode(userName);
+        // append text node to paragraph
+        idTag.appendChild(idText);
+
+        //create the button element-------------------------------------------
+        var newDeleteBtn = document.createElement("button");
+        //set the button type
+        newDeleteBtn.type = "button";
+        //give the paragraph element an id
+        newDeleteBtn.setAttribute(
+          "id",
+          "deleteBtn" + "&" + userName + "&" + (memo.length - 1)
+        );
+        //set onclick listener
+        var x = newDeleteBtn.getAttribute("id");
+        newDeleteBtn.setAttribute(
+          "onClick",
+          "deleteMemo(" + "'" + x + "'" + ")"
+        );
+
+        //create the delete icon-------------------------------------------
+        var newIcon = document.createElement("i");
+        //give it a class icon
+        newIcon.className = "fa-solid fa-trash-can";
+        newDeleteBtn.appendChild(newIcon);
+
+        //create the interaction div
+        var interactionDiv = document.createElement("div");
+        //give it the interactive container class
+        interactionDiv.className = "interaction-container";
+        // append the new button to the interactive container
+        interactionDiv.appendChild(newDeleteBtn);
+
+        //append the two paragraph to the new div
+        iDiv.appendChild(newMemoTag);
+        iDiv.appendChild(idTag);
+        // append the interactive div to the post container
+        iDiv.appendChild(interactionDiv);
+
+        // get handle of parent element where we need to insert dynamic element
+        var allMemoDiv = document.querySelector("#Memos");
+
+        // append the dynamic paragrah element
+        allMemoDiv.appendChild(iDiv);
+        //give the paragraph element an id
+        iDiv.setAttribute("id", userName + "&" + (memo.length - 1));
+      }
+    }
+
+    function showMemos() {
+      var req = new XMLHttpRequest();
+      req.addEventListener("load", loadedEventCallback);
+      req.open("GET", "http://" + host + ":8547/api/memo");
+      req.send();
+
+      function loadedEventCallback() {
+        //console.log(req.responseText);
+        var theData = JSON.parse(req.responseText);
+        //var theData = req.responseText;
+
+        //get the div id
+        var name = document.getElementById("Memos");
+
+        //get the username value
+        // var cookies = document.cookie;
+        // var userName;
+        // userName = cookies;
+        // userName = cookies.toString();
+        // console.log(userName);
+
+        //get every users memo
+        for (var key in theData) {
+          //get the user memo
+          memo = theData[key];
+          for (userMemos in memo) {
+            //will be used to track the index of files for a user
+            fileIndex = 0;
+
+            //create new div element
+            var iDiv = document.createElement("div");
+            //give it the post container class
+            iDiv.className = "post-container";
+
+            // create paragraph element for the memo------------------------------
+            var newMemoTag = document.createElement("p");
+            // create text node for the memo
+            var memoText = document.createTextNode(memo[userMemos]);
+            // append text node to paragraph
+            newMemoTag.appendChild(memoText);
+
+            // create paragraph element for the id------------------------------
+            var idTag = document.createElement("p");
+            //give it the post container class
+            idTag.className = "name-tag";
+            // create text node fro the id
+            var idText = document.createTextNode(key);
+            // append text node to paragraph
+            idTag.appendChild(idText);
+
+            //create the button element-------------------------------------------
+            var newDeleteBtn = document.createElement("button");
+            //set the button type
+            newDeleteBtn.type = "button";
+            //give the button element an id
+            newDeleteBtn.setAttribute(
+              "id",
+              "deleteBtn" + "&" + key + "&" + userMemos
+            );
+            //set onclick listener
+            var x = newDeleteBtn.getAttribute("id");
+            console.log(x);
+            newDeleteBtn.setAttribute(
+              "onClick",
+              "deleteMemo(" + "'" + x + "'" + ");"
+            );
+
+            //create the delete icon-------------------------------------------
+            var newIcon = document.createElement("i");
+            //give it a class icon
+            newIcon.className = "fa-solid fa-trash-can";
+            newDeleteBtn.appendChild(newIcon);
+
+            //create the interaction div
+            var interactionDiv = document.createElement("div");
+            //give it the interactive container class
+            interactionDiv.className = "interaction-container";
+            // append the new button to the interactive container
+            interactionDiv.appendChild(newDeleteBtn);
+
+            //append the two paragraph to the new div
+            iDiv.appendChild(newMemoTag);
+            iDiv.appendChild(idTag);
+            // append the interactive div to the post container
+            iDiv.appendChild(interactionDiv);
+
+            // get handle of parent element where we need to insert dynamic element
+            var allMemoDiv = document.querySelector("#Memos");
+
+            // append the dynamic div element
+            allMemoDiv.appendChild(iDiv);
+            //give the paragraph element an id
+            memoPosition = num_memos++;
+            iDiv.setAttribute("id", key + "&" + userMemos);
+          }
+        }
+      }
+    }
+  </script>
+  <body class="container" onload="showMemos()">
+    <h1>MemoWorld</h1>
+
+    <div class="post-container">
+      <h2>Enter your memo</h2>
+      <input type="text" id="enterMemo" />
+      <button class="post-button" type="button" onclick="saveClicked()">
+        <span>Post it!</span>
+        <svg viewBox="0 0 13 10" height="10px" width="15px">
+          <path d="M1,5 L11,5"></path>
+          <polyline points="8 1 12 5 8 9"></polyline>
+        </svg>
+      </button>
+    </div>
+
+    <!-- <h2>List of Memos</h2> -->
+
+    <div id="Memos"></div>
+  </body>
+</html>
